@@ -1,56 +1,59 @@
-import { Button } from 'primereact/button';
-import { Menu } from 'primereact/menu';
-import type { MenuItem } from 'primereact/menuitem';
-import { Sidebar } from 'primereact/sidebar';
-import React, { useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
-import { useTheme, type Theme } from '../context/ThemeContext';
+"use client"
+
+import { Button } from "primereact/button"
+import { Menu } from "primereact/menu"
+import type { MenuItem } from "primereact/menuitem"
+import { Sidebar } from "primereact/sidebar"
+import type React from "react"
+import { useRef, useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import { useTheme, type Theme } from "../context/ThemeContext"
 
 export const Header: React.FC = () => {
-  const { theme, actualTheme, setTheme } = useTheme();
-  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
-  const location = useLocation();
-  const themeMenuRef = useRef<Menu>(null);
-  const sidebarThemeMenuRef = useRef<Menu>(null);
+  const { theme, actualTheme, setTheme } = useTheme()
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false)
+  const location = useLocation()
+  const themeMenuRef = useRef<Menu>(null)
+  const sidebarThemeMenuRef = useRef<Menu>(null)
 
   const getThemeIcon = (theme: Theme) =>
-    ({ light: 'pi pi-sun', dark: 'pi pi-moon', system: actualTheme === 'dark' ? 'pi pi-moon' : 'pi pi-sun' }[theme]);
+    ({ light: "pi pi-sun", dark: "pi pi-moon", system: actualTheme === "dark" ? "pi pi-moon" : "pi pi-sun" })[theme]
 
-  const getThemeLabel = (theme: Theme) => ({ light: 'Light', dark: 'Dark', system: 'Device' }[theme]);
+  const getThemeLabel = (theme: Theme) => ({ light: "Light", dark: "Dark", system: "Device" })[theme]
 
   const themeMenuItems: MenuItem[] = [
     {
-      label: 'Light',
-      icon: 'pi pi-sun',
-      command: () => setTheme('light'),
-      className: theme === 'light' ? 'bg-blue-50 dark:bg-blue-900' : ''
+      label: "Light",
+      icon: "pi pi-sun",
+      command: () => setTheme("light"),
+      className: theme === "light" ? "bg-primary/10" : "",
     },
     {
-      label: 'Dark',
-      icon: 'pi pi-moon',
-      command: () => setTheme('dark'),
-      className: theme === 'dark' ? 'bg-blue-50 dark:bg-blue-900' : ''
+      label: "Dark",
+      icon: "pi pi-moon",
+      command: () => setTheme("dark"),
+      className: theme === "dark" ? "bg-primary/10" : "",
     },
     {
-      label: 'Device',
-      icon: actualTheme === 'dark' ? 'pi pi-moon' : 'pi pi-sun',
-      command: () => setTheme('system'),
-      className: theme === 'system' ? 'bg-blue-50 dark:bg-blue-900' : ''
-    }
-  ];
+      label: "Device",
+      icon: actualTheme === "dark" ? "pi pi-moon" : "pi pi-sun",
+      command: () => setTheme("system"),
+      className: theme === "system" ? "bg-primary/10" : "",
+    },
+  ]
 
   const navigationItems = [
-    { label: 'Buy', path: '/', icon: 'pi pi-shopping-cart' },
-    { label: 'Sell', path: '/sell', icon: 'pi pi-tags' },
-    { label: 'Activity', path: '/activity', icon: 'pi pi-chart-line' },
-    { label: 'About', path: '/about', icon: 'pi pi-info-circle' }
-  ];
+    { label: "Buy", path: "/", icon: "pi pi-shopping-cart" },
+    { label: "Sell", path: "/sell", icon: "pi pi-tags" },
+    { label: "Activity", path: "/activity", icon: "pi pi-chart-line" },
+    { label: "About", path: "/about", icon: "pi pi-info-circle" },
+  ]
 
   const isActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
-    return false;
-  };
+    if (path === "/" && location.pathname === "/") return true
+    if (path !== "/" && location.pathname.startsWith(path)) return true
+    return false
+  }
 
   const NavLinks = ({ mobile = false, onItemClick }: { mobile?: boolean; onItemClick?: () => void }) => (
     <>
@@ -60,17 +63,17 @@ export const Header: React.FC = () => {
           to={item.path}
           onClick={onItemClick}
           className={`
-            ${mobile ? 'block w-full text-left p-3' : 'px-4 py-2'}
-            text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400
+            ${mobile ? "block w-full text-left p-3" : "px-4 py-2"}
+            text-foreground hover:text-primary
             transition-colors duration-200 font-medium
             ${
               isActive(item.path)
                 ? mobile
-                  ? 'text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-800 rounded-md'
-                  : 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                : ''
+                  ? "text-primary bg-primary/10 rounded-md"
+                  : "text-primary border-b-2 border-primary"
+                : ""
             }
-            ${mobile && !isActive(item.path) ? 'hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md' : ''}
+            ${mobile && !isActive(item.path) ? "hover:bg-muted rounded-md" : ""}
           `}
         >
           <i className={`${item.icon} mr-2`} />
@@ -78,19 +81,22 @@ export const Header: React.FC = () => {
         </Link>
       ))}
     </>
-  );
+  )
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md border-b border-gray-200 dark:border-gray-700">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="bg-blue-600 text-white rounded-lg p-2">
+            <Link to="/" className="flex items-center space-x-3">
+              <div className="bg-primary text-primary-foreground rounded-lg p-2 shadow-lg">
                 <span className="font-bold text-xl">PM</span>
               </div>
-              <span className="font-bold text-xl text-gray-900 dark:text-white hidden sm:block">PeerMart</span>
+              <div className="hidden sm:block">
+                <span className="font-bold text-xl text-foreground">PeerMart</span>
+                <div className="text-xs text-muted-foreground">Hedera Network</div>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -103,25 +109,16 @@ export const Header: React.FC = () => {
               {/* Desktop Theme Toggle Dropdown */}
               <div className="hidden sm:block">
                 <Menu ref={themeMenuRef} model={themeMenuItems} popup className="mt-2" />
-                <Button
-                  icon={getThemeIcon(theme)}
-                  label={getThemeLabel(theme)}
-                  outlined
-                  onClick={(e) => themeMenuRef.current?.toggle(e)}
-                  className="p-2"
-                  tooltip="Change theme"
-                  tooltipOptions={{ position: 'bottom' }}
-                />
+                <Button size="small" onClick={(e) => themeMenuRef.current?.toggle(e)} className="gap-2">
+                  <i className={getThemeIcon(theme)} />
+                  {getThemeLabel(theme)}
+                </Button>
               </div>
 
               {/* Mobile Menu Button */}
-              <Button
-                icon="pi pi-bars"
-                rounded
-                text
-                className="md:hidden p-2"
-                onClick={() => setMobileMenuVisible(true)}
-              />
+              <Button size="small" className="md:hidden" onClick={() => setMobileMenuVisible(true)}>
+                <i className="pi pi-bars" />
+              </Button>
             </div>
           </div>
         </div>
@@ -131,11 +128,14 @@ export const Header: React.FC = () => {
       <Sidebar visible={mobileMenuVisible} onHide={() => setMobileMenuVisible(false)} position="right" className="w-80">
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="bg-blue-600 text-white rounded-lg p-2">
+            <div className="flex items-center space-x-3">
+              <div className="bg-primary text-primary-foreground rounded-lg p-2">
                 <span className="font-bold text-lg">PM</span>
               </div>
-              <span className="font-bold text-lg text-gray-900 dark:text-white">PeerMart</span>
+              <div>
+                <span className="font-bold text-lg text-foreground">PeerMart</span>
+                <div className="text-xs text-muted-foreground">Hedera Network</div>
+              </div>
             </div>
           </div>
 
@@ -145,20 +145,19 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Mobile Theme Selector */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Theme</label>
+          <div className="border-t border-border pt-4">
+            <label className="block text-sm font-medium text-foreground mb-3">Theme</label>
             <Menu ref={sidebarThemeMenuRef} model={themeMenuItems} popup className="mt-2" />
             <Button
-              icon={getThemeIcon(theme)}
-              label={getThemeLabel(theme)}
-              outlined
               onClick={(e) => sidebarThemeMenuRef.current?.toggle(e)}
-              className="w-full justify-start"
-              tooltip="Change theme"
-            />
+              className="w-full justify-start gap-2"
+            >
+              <i className={getThemeIcon(theme)} />
+              {getThemeLabel(theme)}
+            </Button>
           </div>
         </div>
       </Sidebar>
     </>
-  );
-};
+  )
+}

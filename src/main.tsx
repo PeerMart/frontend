@@ -1,17 +1,17 @@
-import { PrimeReactProvider } from 'primereact/api';
-import Tailwind from 'primereact/passthrough/tailwind';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-import { Layout } from './components/Layout';
-import { ThemeProvider } from './context/ThemeContext';
-import './index.css';
-import { AboutPage } from './pages/AboutPage';
-import { ActivityPage } from './pages/ActivityPage';
-import { BuyPage } from './pages/BuyPage';
-import { SellPage } from './pages/SellPage';
+import { PrimeReactProvider } from "primereact/api"
+import Tailwind from "primereact/passthrough/tailwind"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router"
+import { Layout } from "./components/Layout"
+import { ThemeProvider } from "./context/ThemeContext"
+import "./index.css"
+import { AboutPage } from "./pages/AboutPage"
+import { ActivityPage } from "./pages/ActivityPage"
+import { BuyPage } from "./pages/BuyPage"
+import { SellPage } from "./pages/SellPage"
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PrimeReactProvider value={{ ripple: true, pt: Tailwind }}>
       <ThemeProvider>
@@ -28,5 +28,5 @@ createRoot(document.getElementById('root')!).render(
         </BrowserRouter>
       </ThemeProvider>
     </PrimeReactProvider>
-  </StrictMode>
-);
+  </StrictMode>,
+)

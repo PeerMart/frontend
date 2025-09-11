@@ -1,89 +1,125 @@
-import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import { InputText } from 'primereact/inputtext';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Tag } from 'primereact/tag';
-import React from 'react';
+import { Button } from "primereact/button"
+import { Card } from "primereact/card"
+import { InputText as Input } from "primereact/inputtext"
+import { InputTextarea as Textarea } from "primereact/inputtextarea"
+import { Badge } from "primereact/badge"
+import type React from "react"
+
+// Temporary CardContent wrapper for layout purposes
+const CardContent: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ className, children }) => (
+  <div className={className}>{children}</div>
+)
+ 
 
 export const SellPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* Hero Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          <i className="pi pi-tags mr-3 text-green-600" />
-          Sell Your Digital Assets
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-foreground mb-6 text-balance">
+          <i className="pi pi-tags mr-4 text-primary" />
+          Sell Your Products
         </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          List your NFTs and digital collectibles on the Hedera network marketplace
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
+          List your products on our secure marketplace with smart contract escrow protection. Get paid in USDC when
+          buyers confirm receipt.
         </p>
       </div>
 
       {/* Quick Stats for Sellers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">2.5%</div>
-          <div className="text-gray-600 dark:text-gray-400">Platform Fee</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <Card className="text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="text-4xl font-bold text-primary mb-2">5%</div>
+            <div className="text-muted-foreground">Platform Fee</div>
+          </CardContent>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">24h</div>
-          <div className="text-gray-600 dark:text-gray-400">Average Sale Time</div>
+        <Card className="text-center bg-gradient-to-br from-chart-2/5 to-chart-2/10 border-chart-2/20">
+          <CardContent className="pt-6">
+            <div className="text-4xl font-bold text-chart-2 mb-2">3-7 days</div>
+            <div className="text-muted-foreground">Average Sale Time</div>
+          </CardContent>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-2">₳1.2K</div>
-          <div className="text-gray-600 dark:text-gray-400">Avg. Sale Price</div>
+        <Card className="text-center bg-gradient-to-br from-chart-3/5 to-chart-3/10 border-chart-3/20">
+          <CardContent className="pt-6">
+            <div className="text-4xl font-bold text-chart-3 mb-2">$450</div>
+            <div className="text-muted-foreground">Avg. Sale Price</div>
+          </CardContent>
         </Card>
       </div>
 
+      {/* Seller Registration Notice */}
+      <Card className="mb-8 bg-gradient-to-r from-primary/5 to-chart-2/5 border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-4">
+            <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center">
+              <i className="pi pi-info-circle text-xl text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">Seller Registration Required</h3>
+              <p className="text-muted-foreground text-sm">
+                Complete seller verification with contact details before listing products.
+              </p>
+            </div>
+            <Button className="bg-primary hover:bg-primary/90">Register Now</Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Create Listing Form */}
-      <Card className="mb-8">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <i className="pi pi-plus-circle mr-3 text-green-600" />
-            Create New Listing
+      <Card className="mb-12">
+        <CardContent className="p-8">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
+            <i className="pi pi-plus-circle mr-3 text-primary" />
+            Create Product Listing
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left Column */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Item Name</label>
-                <InputText placeholder="Enter item name" className="w-full" />
+                <label className="block text-sm font-medium text-foreground mb-2">Product Name</label>
+                <Input placeholder="Enter product name" className="w-full" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                <InputTextarea placeholder="Describe your item..." rows={4} className="w-full" />
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                <Textarea placeholder="Describe your product features, condition, etc..." rows={4} className="w-full" />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Price (HBAR)</label>
-                <InputText placeholder="0.00" className="w-full" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Price (USDC)</label>
+                  <Input placeholder="0.00" className="w-full" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Inventory</label>
+                  <Input placeholder="1" type="number" className="w-full" />
+                </div>
               </div>
             </div>
 
             {/* Right Column */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload File</label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                  <i className="pi pi-cloud-upload text-4xl text-gray-400 mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">Drop your file here or click to browse</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                    Supports: JPG, PNG, GIF, MP4 (Max 50MB)
-                  </p>
+                <label className="block text-sm font-medium text-foreground mb-2">Upload Images</label>
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted/20">
+                  <i className="pi pi-cloud-upload text-4xl text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Drop product images here or click to browse</p>
+                  <p className="text-sm text-muted-foreground mt-2">Supports: JPG, PNG (Max 10MB each)</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Category</label>
                 <div className="flex flex-wrap gap-2">
-                  {['Art', 'Music', 'Gaming', 'Collectibles', 'Photography'].map((category) => (
-                    <Tag
+                  {["Electronics", "Fashion", "Home & Garden", "Sports", "Books", "Toys"].map((category) => (
+                    <Badge
                       key={category}
-                      value={category}
-                      className="cursor-pointer hover:bg-blue-600 hover:text-white"
-                    />
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground border-primary/30"
+                    >
+                      {category}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -91,51 +127,72 @@ export const SellPage: React.FC = () => {
           </div>
 
           <div className="flex justify-end space-x-4 mt-8">
-            <Button label="Save Draft" outlined icon="pi pi-save" />
-            <Button label="List Item" icon="pi pi-check" className="bg-green-600 hover:bg-green-700" />
+            <Button className="gap-2 bg-transparent">
+              <i className="pi pi-save" />
+              Save Draft
+            </Button>
+            <Button className="bg-primary hover:bg-primary/90 gap-2">
+              <i className="pi pi-check" />
+              List Product
+            </Button>
           </div>
-        </div>
+        </CardContent>
       </Card>
 
       {/* Your Listings */}
       <Card>
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <i className="pi pi-list mr-3 text-blue-600" />
+        <CardContent className="p-8">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
+            <i className="pi pi-list mr-3 text-chart-2" />
             Your Active Listings
           </h2>
 
           <div className="space-y-4">
-            {[1, 2].map((item) => (
+            {[
+              { name: "iPhone 14 Pro - Unlocked", price: "800", status: "Active", inventory: "2" },
+              { name: "Nike Air Max 270", price: "120", status: "Sold", inventory: "0" },
+            ].map((item, index) => (
               <div
-                key={item}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                key={index}
+                className="flex items-center justify-between p-6 border border-border rounded-lg bg-card hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg flex items-center justify-center">
-                    <i className="pi pi-image text-xl text-gray-400" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-lg flex items-center justify-center">
+                    <i className="pi pi-image text-xl text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Digital Art #{item}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Listed 2 days ago</p>
+                    <h3 className="font-semibold text-foreground">{item.name}</h3>
+                    <p className="text-sm text-muted-foreground">Listed 2 days ago • {item.inventory} in stock</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">150 HBAR</div>
-                    <Tag value="Active" severity="success" />
+                    <div className="font-semibold text-foreground">${item.price} USDC</div>
+                    <Badge
+                      className={
+                        item.status === "Active"
+                          ? "bg-chart-2/10 text-chart-2 border-chart-2/30"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {item.status}
+                    </Badge>
                   </div>
                   <div className="flex space-x-2">
-                    <Button icon="pi pi-pencil" rounded text size="small" tooltip="Edit" />
-                    <Button icon="pi pi-trash" rounded text severity="danger" size="small" tooltip="Remove" />
+                    <Button className="p-button-text" size="small">
+                      <i className="pi pi-pencil" />
+                    </Button>
+                    <Button size="small" className="p-button-text text-destructive hover:text-destructive">
+                      <i className="pi pi-trash" />
+                    </Button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}

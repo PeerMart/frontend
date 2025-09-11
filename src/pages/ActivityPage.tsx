@@ -1,210 +1,171 @@
-import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import { Tag } from 'primereact/tag';
-import { Timeline } from 'primereact/timeline';
-import React from 'react';
+import { Button } from "primereact/button"
+import { Card } from "primereact/card"
+import { Badge } from "primereact/badge"
+import type React from "react"
 
 export const ActivityPage: React.FC = () => {
   const activities = [
     {
       id: 1,
-      type: 'sale',
-      title: 'Digital Art #123 Sold',
-      description: 'Sold for 150 HBAR',
-      timestamp: '2 hours ago',
-      icon: 'pi pi-shopping-cart',
-      color: 'green'
+      type: "sale",
+      title: "iPhone 14 Pro Sold",
+      description: "Payment confirmed - $800 USDC received",
+      timestamp: "2 hours ago",
+      icon: "pi pi-check-circle",
+      color: "chart-2",
     },
     {
       id: 2,
-      type: 'listing',
-      title: 'New Item Listed',
-      description: 'Music NFT #456 listed for 75 HBAR',
-      timestamp: '5 hours ago',
-      icon: 'pi pi-plus-circle',
-      color: 'blue'
+      type: "listing",
+      title: "New Product Listed",
+      description: "Nike Air Max 270 listed for $120 USDC",
+      timestamp: "5 hours ago",
+      icon: "pi pi-plus-circle",
+      color: "primary",
     },
     {
       id: 3,
-      type: 'offer',
-      title: 'Offer Received',
-      description: 'New offer of 120 HBAR on Digital Art #789',
-      timestamp: '1 day ago',
-      icon: 'pi pi-handshake',
-      color: 'orange'
+      type: "purchase",
+      title: "MacBook Pro Purchased",
+      description: "Payment in escrow - awaiting delivery confirmation",
+      timestamp: "1 day ago",
+      icon: "pi pi-shopping-cart",
+      color: "chart-3",
     },
     {
       id: 4,
-      type: 'purchase',
-      title: 'Purchase Completed',
-      description: 'Bought Collectible #321 for 200 HBAR',
-      timestamp: '2 days ago',
-      icon: 'pi pi-check-circle',
-      color: 'purple'
+      type: "refund",
+      title: "Purchase Cancelled",
+      description: "Refund processed for Samsung Galaxy S23 - $650 USDC",
+      timestamp: "2 days ago",
+      icon: "pi pi-undo",
+      color: "chart-4",
+    },
+  ]
+
+  const getTagVariant = (type: string) => {
+    const variants = {
+      sale: "default" as const,
+      listing: "secondary" as const,
+      purchase: "outline" as const,
+      refund: "secondary" as const,
     }
-  ];
-
-  const getColorClass = (color: string) => {
-    const colors = {
-      green: 'text-green-600',
-      blue: 'text-blue-600',
-      orange: 'text-orange-600',
-      purple: 'text-purple-600'
-    };
-    return colors[color as keyof typeof colors] || 'text-gray-600';
-  };
-
-  const getTagSeverity = (type: string): 'success' | 'info' | 'warning' | 'secondary' | 'danger' | 'contrast' => {
-    const severities = {
-      sale: 'success' as const,
-      listing: 'info' as const,
-      offer: 'warning' as const,
-      purchase: 'secondary' as const
-    };
-    return severities[type as keyof typeof severities] || 'info';
-  };
+    return variants[type as keyof typeof variants] || "secondary"
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* Hero Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          <i className="pi pi-chart-line mr-3 text-purple-600" />
-          Activity Feed
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-foreground mb-6 text-balance">
+          <i className="pi pi-chart-line mr-4 text-primary" />
+          Transaction History
         </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Track your marketplace activities, sales, purchases, and listings
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
+          Track your marketplace activities, sales, purchases, and escrow transactions on the Hedera network.
         </p>
       </div>
 
       {/* Activity Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-green-600 mb-2">12</div>
-          <div className="text-gray-600 dark:text-gray-400">Items Sold</div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <Card className="text-center bg-gradient-to-br from-chart-2/5 to-chart-2/10 border-chart-2/20">
+          <div className="pt-6">
+            <div className="text-4xl font-bold text-chart-2 mb-2">23</div>
+            <div className="text-muted-foreground">Products Sold</div>
+          </div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">8</div>
-          <div className="text-gray-600 dark:text-gray-400">Items Bought</div>
+        <Card className="text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <div className="pt-6">
+            <div className="text-4xl font-bold text-primary mb-2">15</div>
+            <div className="text-muted-foreground">Products Bought</div>
+          </div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-orange-600 mb-2">5</div>
-          <div className="text-gray-600 dark:text-gray-400">Active Listings</div>
+        <Card className="text-center bg-gradient-to-br from-chart-3/5 to-chart-3/10 border-chart-3/20">
+          <div className="pt-6">
+            <div className="text-4xl font-bold text-chart-3 mb-2">7</div>
+            <div className="text-muted-foreground">Active Listings</div>
+          </div>
         </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-2">3</div>
-          <div className="text-gray-600 dark:text-gray-400">Pending Offers</div>
+        <Card className="text-center bg-gradient-to-br from-chart-4/5 to-chart-4/10 border-chart-4/20">
+          <div className="pt-6">
+            <div className="text-4xl font-bold text-chart-4 mb-2">2</div>
+            <div className="text-muted-foreground">In Escrow</div>
+          </div>
         </Card>
       </div>
 
       {/* Filter Buttons */}
       <Card className="mb-8">
-        <div className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filter Activities</h2>
+        <div className="p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Filter Activities</h2>
           <div className="flex flex-wrap gap-2">
-            <Button label="All" size="small" outlined />
-            <Button label="Sales" size="small" outlined icon="pi pi-shopping-cart" />
-            <Button label="Purchases" size="small" outlined icon="pi pi-check-circle" />
-            <Button label="Listings" size="small" outlined icon="pi pi-plus-circle" />
-            <Button label="Offers" size="small" outlined icon="pi pi-handshake" />
+            <Button outlined size="small">
+              All
+            </Button>
+            <Button outlined size="small" className="gap-2 bg-transparent">
+              <i className="pi pi-check-circle" />
+              Sales
+            </Button>
+            <Button outlined size="small" className="gap-2 bg-transparent">
+              <i className="pi pi-shopping-cart" />
+              Purchases
+            </Button>
+            <Button outlined size="small" className="gap-2 bg-transparent">
+              <i className="pi pi-plus-circle" />
+              Listings
+            </Button>
+            <Button outlined size="small" className="gap-2 bg-transparent">
+              <i className="pi pi-shield" />
+              Escrow
+            </Button>
           </div>
         </div>
       </Card>
 
       {/* Activity Timeline */}
       <Card>
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <i className="pi pi-clock mr-3 text-blue-600" />
+        <div className="p-8">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
+            <i className="pi pi-clock mr-3 text-primary" />
             Recent Activity
           </h2>
 
-          <Timeline
-            value={activities}
-            content={(item) => (
-              <div className="flex items-start justify-between w-full">
+          <div className="space-y-6">
+            {activities.map((item, index) => (
+              <div key={item.id} className="flex items-start space-x-4 pb-6 border-b border-border last:border-b-0">
+                <div
+                  className={`flex items-center justify-center w-12 h-12 rounded-full bg-${item.color}/10 border-2 border-${item.color}/20`}
+                >
+                  <i className={`${item.icon} text-lg text-${item.color}`} />
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                    <Tag
-                      value={item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                      severity={getTagSeverity(item.type)}
-                    />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="font-semibold text-foreground">{item.title}</h3>
+                      <Badge className={`badge-${getTagVariant(item.type)}`}>
+                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                      </Badge>
+                    </div>
+                    <Button size="small" className="p-button-text">
+                      <i className="pi pi-external-link" />
+                    </Button>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-1">{item.description}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">{item.timestamp}</p>
-                </div>
-                <div className="ml-4">
-                  <Button icon="pi pi-external-link" rounded text size="small" tooltip="View Details" />
+                  <p className="text-muted-foreground mb-1">{item.description}</p>
+                  <p className="text-sm text-muted-foreground">{item.timestamp}</p>
                 </div>
               </div>
-            )}
-            marker={(item) => (
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border-2 border-current ${getColorClass(
-                  item.color
-                )}`}
-              >
-                <i className={`${item.icon} text-sm`} />
-              </div>
-            )}
-            className="w-full"
-          />
+            ))}
+          </div>
 
           {/* Load More */}
           <div className="text-center mt-8">
-            <Button label="Load More Activities" outlined icon="pi pi-refresh" />
-          </div>
-        </div>
-      </Card>
-
-      {/* Statistics Card */}
-      <Card className="mt-8">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <i className="pi pi-chart-bar mr-3 text-green-600" />
-            Performance Overview
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Sales Performance</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Total Sales Volume</span>
-                  <span className="font-semibold">1,850 HBAR</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Average Sale Price</span>
-                  <span className="font-semibold">154 HBAR</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Success Rate</span>
-                  <span className="font-semibold text-green-600">87%</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Market Activity</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Profile Views</span>
-                  <span className="font-semibold">2,340</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Item Views</span>
-                  <span className="font-semibold">8,720</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Conversion Rate</span>
-                  <span className="font-semibold text-blue-600">12.5%</span>
-                </div>
-              </div>
-            </div>
+            <Button outlined className="gap-2 bg-transparent">
+              <i className="pi pi-refresh" />
+              Load More Activities
+            </Button>
           </div>
         </div>
       </Card>
     </div>
-  );
-};
+  )
+}
