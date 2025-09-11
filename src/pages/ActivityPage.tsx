@@ -131,7 +131,7 @@ export const ActivityPage: React.FC = () => {
           </h2>
 
           <div className="space-y-6">
-            {activities.map((item, index) => (
+            {activities.map((item) => (
               <div key={item.id} className="flex items-start space-x-4 pb-6 border-b border-border last:border-b-0">
                 <div
                   className={`flex items-center justify-center w-12 h-12 rounded-full bg-${item.color}/10 border-2 border-${item.color}/20`}
