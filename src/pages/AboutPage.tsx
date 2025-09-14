@@ -49,7 +49,7 @@ export const AboutPage: React.FC = () => {
   ]
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 pt-16">
       {/* Hero Section */}
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold text-foreground mb-6 text-balance">
@@ -143,15 +143,15 @@ export const AboutPage: React.FC = () => {
             Connect with thousands of verified sellers and secure shoppers in our growing e-commerce community.
           </p>
           <div className="flex justify-center space-x-4 mb-8">
-            <Button className="gap-2 bg-transparent border border-primary text-primary hover:bg-primary/10">
+            <Button className="gap-2 border border-primary text-primary hover:bg-primary/10">
               <i className="pi pi-discord" />
               Discord
             </Button>
-            <Button className="gap-2 bg-transparent border border-primary text-primary hover:bg-primary/10">
+            <Button className="gap-2 border border-primary text-primary hover:bg-primary/10">
               <i className="pi pi-twitter" />
               Twitter
             </Button>
-            <Button className="gap-2 bg-transparent border border-primary text-primary hover:bg-primary/10">
+            <Button className="gap-2 border border-primary text-primary hover:bg-primary/10">
               <i className="pi pi-send" />
               Telegram
             </Button>
