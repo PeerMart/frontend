@@ -1,7 +1,7 @@
-import type React from "react"
-import { Outlet } from "react-router-dom"
-import { Footer } from "./Footer"
-import { Header } from "./Header"
+import type React from 'react';
+import { Outlet } from 'react-router-dom';
+import { Footer } from './Footer';
+import { Header } from './Header';
 
 export const Layout: React.FC = () => {
   return (
@@ -15,5 +15,5 @@ export const Layout: React.FC = () => {
 
       <Footer />
     </div>
-  )
-}
+  );
+};
