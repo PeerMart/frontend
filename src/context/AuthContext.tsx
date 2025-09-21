@@ -1,5 +1,3 @@
-'use client';
-
 import { ethers } from 'ethers';
 import type React from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';

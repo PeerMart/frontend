@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
 import type { MenuItem } from 'primereact/menuitem';
@@ -132,21 +130,18 @@ export const Header: React.FC = () => {
     <>
       <Toast ref={toastRef} />
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm shadow-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3">
-              <div className="bg-primary text-primary-foreground rounded-lg p-2 shadow-lg">
-                <span className="font-bold text-xl">PM</span>
-              </div>
-              <div className="hidden sm:block">
+              <div>
                 <span className="font-bold text-xl text-foreground">PeerMart</span>
                 <div className="text-xs text-muted-foreground">Hedera Network</div>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden lg:flex items-center space-x-6">
               <NavLinks />
             </nav>
 
@@ -164,8 +159,7 @@ export const Header: React.FC = () => {
                       severity="success"
                     >
                       <i className="pi pi-wallet" />
-                      <span className="hidden lg:inline">{formatAddress(wallet.address)}</span>
-                      <span className="hidden md:inline lg:hidden">Connected</span>
+                      <span>{formatAddress(wallet.address)}</span>
                     </Button>
                   </>
                 ) : (
@@ -186,7 +180,7 @@ export const Header: React.FC = () => {
               </div>
 
               {/* Mobile Menu Button */}
-              <Button size="small" className="md:hidden" onClick={() => setMobileMenuVisible(true)}>
+              <Button size="small" className="lg:hidden" onClick={() => setMobileMenuVisible(true)}>
                 <i className="pi pi-bars" />
               </Button>
             </div>
@@ -197,16 +191,9 @@ export const Header: React.FC = () => {
       {/* Mobile Sidebar */}
       <Sidebar visible={mobileMenuVisible} onHide={() => setMobileMenuVisible(false)} position="right" className="w-80">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary text-primary-foreground rounded-lg p-2">
-                <span className="font-bold text-lg">PM</span>
-              </div>
-              <div>
-                <span className="font-bold text-lg text-foreground">PeerMart</span>
-                <div className="text-xs text-muted-foreground">Hedera Network</div>
-              </div>
-            </div>
+          <div className="mb-6">
+            <span className="font-bold text-lg text-foreground">PeerMart</span>
+            <div className="text-xs text-muted-foreground">Hedera Network</div>
           </div>
 
           {/* Mobile Navigation */}
