@@ -10,7 +10,7 @@ const MOCK_USDC_ADDRESS = '0x7fdde93c75669792002c8dbd49d0f6e869d15c96';
 
 interface ContractContextType {
   read: (props: ContractCallProps) => Promise<any>;
-  write: () => Promise<any>;
+  write: (props: ContractCallProps) => Promise<any>;
 }
 
 export interface ContractCallProps {
@@ -29,8 +29,8 @@ export const useContract = () => useContext(ContractContext);
 export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const provider = new JsonRpcProvider('https://testnet.hashio.io/api');
   const { wallet } = useAuth();
-  const getPeermart = () => new Contract(PEERMART_ADDRESS, peerMartAbi, wallet ?? provider);
-  const getUsdc = () => new Contract(MOCK_USDC_ADDRESS, mockUsdcAbi, wallet ?? provider);
+  const getPeermart = () => new Contract(PEERMART_ADDRESS, peerMartAbi, wallet?.signer ?? provider);
+  const getUsdc = () => new Contract(MOCK_USDC_ADDRESS, mockUsdcAbi, wallet?.signer ?? provider);
 
   const [peermart, setPeermart] = useState(getPeermart());
   const [usdc, setUsdc] = useState(getUsdc());
@@ -50,7 +50,16 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const write = async () => {};
+  const write = async ({ method, args, isUsdc }: ContractCallProps) => {
+    const contract = isUsdc ? usdc : peermart;
+    try {
+      await (await contract[method](...(args ?? []))).wait();
+      return true;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
 
   return <ContractContext.Provider value={{ read, write }}>{children}</ContractContext.Provider>;
 };

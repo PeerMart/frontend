@@ -5,17 +5,26 @@ import { useContract } from './ContractContext';
 
 interface SellerContextType {
   current: Seller | null;
+  register: (props: RegisterSellerProps) => Promise<boolean>;
+}
+
+export interface RegisterSellerProps {
+  name: string;
+  twitterUsername: string;
+  location: string;
+  phoneNumber: string;
 }
 
 const SellerContext = createContext<SellerContextType>({
-  current: null
+  current: null,
+  register: async () => false
 });
 
 export const useSeller = () => useContext(SellerContext);
 
 export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { wallet } = useAuth();
-  const { read } = useContract();
+  const { read, write } = useContract();
   const [seller, setSeller] = useState<Seller | null>(null);
 
   const fetchAndSetSeller = async () => {
@@ -25,8 +34,17 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const raw2 = await read({ method: 'sellerContacts', args: [wallet.address] });
     if (raw1 && raw2) {
       const converted = new Seller([...raw1, ...raw2]);
-      if (converted.name) setSeller(converted)
+      if (converted.name) setSeller(converted);
     }
+  };
+
+  const register = async (props: RegisterSellerProps) => {
+    if (!wallet || seller) return false;
+
+    props.twitterUsername = `https://x.com/${props.twitterUsername}`;
+    const result = await write({ method: 'registerSeller', args: Object.values(props) });
+    if (result) await fetchAndSetSeller();
+    return !!result;
   };
 
   useEffect(() => {
@@ -37,5 +55,5 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [wallet]);
 
-  return <SellerContext.Provider value={{ current: seller }}>{children}</SellerContext.Provider>;
+  return <SellerContext.Provider value={{ current: seller, register }}>{children}</SellerContext.Provider>;
 };
