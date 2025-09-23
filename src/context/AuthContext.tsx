@@ -18,7 +18,14 @@ interface AuthContextType {
   error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  isConnected: false,
+  wallet: null,
+  connectWallet: async () => {},
+  disconnectWallet: () => {},
+  isConnecting: false,
+  error: null
+});
 
 // Hedera Testnet configuration
 const HEDERA_TESTNET_CONFIG = {
@@ -182,13 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
 // Type declaration for window.ethereum
 declare global {

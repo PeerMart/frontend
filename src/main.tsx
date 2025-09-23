@@ -4,7 +4,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
-import { AuthProvider, SidebarProvider, ThemeProvider } from './context';
+import { AuthProvider, ContractProvider, SidebarProvider, ThemeProvider } from './context';
 import './index.css';
 import { AboutPage } from './pages/AboutPage';
 import { ActivityPage } from './pages/ActivityPage';
@@ -16,19 +16,21 @@ createRoot(document.getElementById('root')!).render(
     <PrimeReactProvider value={{ ripple: true, pt: Tailwind }}>
       <ThemeProvider>
         <AuthProvider>
-          <SidebarProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<BuyPage />} />
-                  <Route path="sell" element={<SellPage />} />
-                  <Route path="activity" element={<ActivityPage />} />
-                  <Route path="about" element={<AboutPage />} />
-                </Route>
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </BrowserRouter>
-          </SidebarProvider>
+          <ContractProvider>
+            <SidebarProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<BuyPage />} />
+                    <Route path="sell" element={<SellPage />} />
+                    <Route path="activity" element={<ActivityPage />} />
+                    <Route path="about" element={<AboutPage />} />
+                  </Route>
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </SidebarProvider>
+          </ContractProvider>
         </AuthProvider>
       </ThemeProvider>
     </PrimeReactProvider>
