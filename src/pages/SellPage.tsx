@@ -8,7 +8,7 @@ import { classNames } from 'primereact/utils';
 import type React from 'react';
 import { useState } from 'react';
 import { z } from 'zod';
-import { useSeller } from '../context';
+import { useSeller, useToast } from '../context';
 
 // Temporary CardContent wrapper for layout purposes
 const CardContent: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ className, children }) => (
@@ -42,6 +42,7 @@ export const SellPage: React.FC = () => {
     location: '',
     phoneNumber: ''
   });
+  const toast = useToast();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,7 +86,14 @@ export const SellPage: React.FC = () => {
     setIsSubmitting(true);
 
     const isSuccess = await register(formData);
-    if (isSuccess) setFormData({ name: '', twitterUsername: '', location: '', phoneNumber: '' });
+    if (isSuccess) {
+      setFormData({ name: '', twitterUsername: '', location: '', phoneNumber: '' });
+      toast.show({
+        summary: 'Registered Successfully',
+        detail: 'Welcome to PeerMart, create your first product now!',
+        severity: 'success'
+      });
+    }
     setIsSubmitting(false);
   };
   return (
