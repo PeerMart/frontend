@@ -2,6 +2,7 @@ import { Contract, JsonRpcProvider } from 'ethers';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { mockUsdcAbi, peerMartAbi } from './abis';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 export type WhichContract = 'peermart' | 'usdc';
 
@@ -29,6 +30,7 @@ export const useContract = () => useContext(ContractContext);
 export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const provider = new JsonRpcProvider('https://testnet.hashio.io/api');
   const { wallet } = useAuth();
+  const toast = useToast();
   const getPeermart = () => new Contract(PEERMART_ADDRESS, peerMartAbi, wallet?.signer ?? provider);
   const getUsdc = () => new Contract(MOCK_USDC_ADDRESS, mockUsdcAbi, wallet?.signer ?? provider);
 
@@ -45,6 +47,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       return await contract[method](...(args ?? []));
     } catch (e) {
+      toast.show({ detail: `Error: ${e}`, severity: 'error' });
       console.error(e);
       return null;
     }
@@ -56,6 +59,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await (await contract[method](...(args ?? []))).wait();
       return true;
     } catch (e) {
+      toast.show({ detail: `Error: ${e}`, severity: 'error' });
       console.error(e);
       return null;
     }
