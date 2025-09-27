@@ -4,6 +4,7 @@ export class Seller {
   confirmedPurchases: number;
   canceledPurchases: number;
   reportedPurchases: number;
+  rating: number;
   location: string;
   phoneNumber: string;
 
@@ -13,7 +14,8 @@ export class Seller {
     this.confirmedPurchases = Number(input[2]);
     this.canceledPurchases = Number(input[3]);
     this.reportedPurchases = Number(input[4]);
-    this.location = `${input[5]}`;
-    this.phoneNumber = input[6];
+    this.rating = Number(input[5]);
+    this.location = input[6];
+    this.phoneNumber = input[7];
   }
 }

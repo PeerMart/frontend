@@ -41,8 +41,10 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const register = async (props: RegisterSellerProps) => {
     if (!wallet || seller) return false;
 
-    props.twitterUsername = `https://x.com/${props.twitterUsername}`;
-    const result = await write({ method: 'registerSeller', args: Object.values(props) });
+    const { location, name, phoneNumber, twitterUsername } = props;
+    const twitterUrl = `https://x.com/${twitterUsername}`;
+
+    const result = await write({ method: 'registerSeller', args: [name, twitterUrl, location, phoneNumber] });
     if (result) await fetchAndSetSeller();
     return !!result;
   };
