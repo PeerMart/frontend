@@ -1,4 +1,5 @@
 export * from './AuthContext';
+export * from './BuyerContext';
 export * from './ContractContext';
 export * from './IPFSContext';
 export * from './SellerContext';

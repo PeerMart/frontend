@@ -79,7 +79,7 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!wallet || !seller) return false;
 
     const { name, ipfsHash, price, description, inventory } = props;
-    const imageUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
+    const imageUrl = `ipfs://${ipfsHash}`;
 
     const result = await write({
       method: 'createProduct',

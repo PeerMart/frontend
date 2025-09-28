@@ -6,7 +6,7 @@ import { useToast } from './ToastContext';
 
 export type WhichContract = 'peermart' | 'usdc';
 
-const PEERMART_ADDRESS = '0xAdB02aaC89051778f505f7FC6A905E21283a62d3';
+export const PEERMART_ADDRESS = '0xAdB02aaC89051778f505f7FC6A905E21283a62d3';
 const MOCK_USDC_ADDRESS = '0x7fdde93c75669792002c8dbd49d0f6e869d15c96';
 
 interface ContractContextType {
@@ -47,7 +47,7 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       return await contract[method](...(args ?? []));
     } catch (e) {
-      toast.show({ detail: `Error: ${e}`, severity: 'error' });
+      // toast.show({ detail: `Error: ${e}`, severity: 'error' });
       console.error(e);
       return null;
     }
@@ -59,7 +59,9 @@ export const ContractProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await (await contract[method](...(args ?? []))).wait();
       return true;
     } catch (e) {
-      toast.show({ detail: `Error: ${e}`, severity: 'error' });
+      if (`${e}`.includes('rejected')) return null;
+      
+      // toast.show({ detail: `Error: ${e}`, severity: 'error' });
       console.error(e);
       return null;
     }

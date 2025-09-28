@@ -1,15 +1,90 @@
-import { Button } from "primereact/button"
-import { Card } from "primereact/card"
-import { Badge } from "primereact/badge"
-import type React from "react"
+import { Badge } from 'primereact/badge';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import type React from 'react';
+import { useCallback, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useBuyer } from '../context/BuyerContext';
 
 // Temporary CardContent wrapper for layout purposes
 const CardContent: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
   <div className={className}>{children}</div>
-)
-
+);
 
 export const BuyPage: React.FC = () => {
+  const { products, loading, buy } = useBuyer();
+  const { wallet } = useAuth();
+  // IPFS gateways for fallback
+  const ipfsGateways = [
+    'https://dweb.link/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://ipfs.io/ipfs/'
+  ];
+
+  // Helper function to convert IPFS hash to gateway URL
+  const getIpfsUrl = useCallback((ipfsHash: string, gatewayIndex: number = 0) => {
+    if (!ipfsHash) return '';
+    // Remove 'ipfs://' prefix if present
+    const hash = ipfsHash.replace('https://ipfs.io/ipfs/', '');
+    return `${ipfsGateways[gatewayIndex] || ipfsGateways[0]}${hash}`;
+  }, []);
+
+  // Component for IPFS image with fallback
+  const IPFSImage: React.FC<{
+    hash: string;
+    alt: string;
+    className?: string;
+    onLoad?: () => void;
+    onError?: () => void;
+  }> = ({ hash, alt, className, onLoad, onError }) => {
+    const [gatewayIndex, setGatewayIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+
+    const handleLoad = () => {
+      setIsLoading(false);
+      setHasError(false);
+      onLoad?.();
+    };
+
+    const handleError = () => {
+      if (gatewayIndex < ipfsGateways.length - 1) {
+        // Try next gateway
+        setGatewayIndex((prev) => prev + 1);
+      } else {
+        // All gateways failed
+        setIsLoading(false);
+        setHasError(true);
+        onError?.();
+      }
+    };
+
+    if (hasError) {
+      return (
+        <i className="pi pi-image text-6xl text-muted-foreground group-hover:scale-110 transition-transform duration-300" />
+      );
+    }
+
+    return (
+      <>
+        {isLoading && <i className="pi pi-spinner pi-spin text-4xl text-muted-foreground absolute" />}
+        <img
+          src={getIpfsUrl(hash, gatewayIndex)}
+          alt={alt}
+          className={className}
+          onLoad={handleLoad}
+          onError={handleError}
+          style={{
+            opacity: isLoading ? 0 : 1,
+            transition: 'opacity 0.3s'
+          }}
+        />
+      </>
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 pt-12">
       {/* Hero Section */}
@@ -28,72 +103,109 @@ export const BuyPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <Card className="text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="pt-6">
-            <div className="text-4xl font-bold text-primary mb-2">12,450</div>
-            <div className="text-muted-foreground">Products Listed</div>
+            <div className="text-4xl font-bold text-primary mb-2">{products.length}</div>
+            <div className="text-muted-foreground">Products Available</div>
           </CardContent>
         </Card>
         <Card className="text-center bg-gradient-to-br from-chart-2/5 to-chart-2/10 border-chart-2/20">
           <CardContent className="pt-6">
-            <div className="text-4xl font-bold text-chart-2 mb-2">3,267</div>
-            <div className="text-muted-foreground">Successful Orders</div>
+            <div className="text-4xl font-bold text-chart-2 mb-2">
+              {products.reduce((sum, product) => sum + product.totalSold, 0)}
+            </div>
+            <div className="text-muted-foreground">Products Sold</div>
           </CardContent>
         </Card>
         <Card className="text-center bg-gradient-to-br from-chart-3/5 to-chart-3/10 border-chart-3/20">
           <CardContent className="pt-6">
-            <div className="text-4xl font-bold text-chart-3 mb-2">99.8%</div>
-            <div className="text-muted-foreground">Fraud Prevention Rate</div>
+            <div className="text-4xl font-bold text-chart-3 mb-2">100%</div>
+            <div className="text-muted-foreground">Secure Transactions</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Featured Items */}
+      {/* Products */}
       <div className="mb-12">
         <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
-          <i className="pi pi-star mr-3 text-primary" />
-          Featured Products
+          <i className="pi pi-shopping-cart mr-3 text-primary" />
+          Latest Products
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            { name: "iPhone 15 Pro Max", price: "1,200", category: "Electronics", seller: "TechStore Pro" },
-            { name: "Nike Air Jordan 1", price: "180", category: "Fashion", seller: "SneakerHub" },
-            { name: "MacBook Pro M3", price: "2,500", category: "Electronics", seller: "AppleDealer" },
-          ].map((item, index) => (
-            <Card
-              key={index}
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/30"
-            >
-              <CardContent className="p-0">
-                <div className="aspect-square bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-t-lg flex items-center justify-center relative overflow-hidden">
-                  <i className="pi pi-image text-6xl text-muted-foreground group-hover:scale-110 transition-transform duration-300" />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-background/80 backdrop-blur-sm">
-                      Verified Seller
-                    </Badge>
-                  </div>
-                </div>
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-foreground mb-2">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Sold by {item.seller} • {item.category}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <Badge className="text-primary border-primary/30 border border-solid bg-transparent">
-                        ${item.price} USDC
-                      </Badge>
-                      <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/30">In Stock</Badge>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <ProgressSpinner />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <i className="pi pi-inbox text-6xl text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Products Available</h3>
+            <p className="text-muted-foreground">Be the first to list a product on our marketplace!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <Card
+                key={product.id}
+                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/30"
+              >
+                <CardContent className="p-0">
+                  <div className="aspect-square bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                    {product.imageUrl ? (
+                      <IPFSImage
+                        hash={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <i className="pi pi-image text-6xl text-muted-foreground group-hover:scale-110 transition-transform duration-300" />
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-background/80 backdrop-blur-sm">Verified Seller</Badge>
                     </div>
-                    <Button size="small" className="bg-primary hover:bg-primary/90">
-                      Buy Secure
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-lg text-foreground mb-2 truncate">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">Sold by {product.sellerName}</p>
+                      {product.description && (
+                        <p
+                          className="text-sm text-muted-foreground mt-2 overflow-hidden"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical'
+                          }}
+                        >
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <Badge className="text-primary border-primary/30 border border-solid bg-transparent">
+                          ${(product.price / 1000000).toFixed(2)} USDC
+                        </Badge>
+                        <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/30">
+                          {product.inventory} in stock
+                        </Badge>
+                      </div>
+                      <Button
+                        size="small"
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => buy(product.id, product.price)}
+                        disabled={!wallet || product.inventory === 0}
+                      >
+                        {!wallet ? 'Connect Wallet' : 'Buy'}
+                      </Button>
+                    </div>
+                    {product.totalSold > 0 && (
+                      <div className="text-xs text-muted-foreground">{product.totalSold} sold</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Categories */}
@@ -104,10 +216,10 @@ export const BuyPage: React.FC = () => {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { name: "Electronics", icon: "pi pi-mobile", color: "primary" },
-            { name: "Fashion", icon: "pi pi-shopping-bag", color: "chart-2" },
-            { name: "Home & Garden", icon: "pi pi-home", color: "chart-3" },
-            { name: "Sports", icon: "pi pi-heart", color: "chart-4" },
+            { name: 'Electronics', icon: 'pi pi-mobile', color: 'primary' },
+            { name: 'Fashion', icon: 'pi pi-shopping-bag', color: 'chart-2' },
+            { name: 'Home & Garden', icon: 'pi pi-home', color: 'chart-3' },
+            { name: 'Sports', icon: 'pi pi-heart', color: 'chart-4' }
           ].map((category) => (
             <Card
               key={category.name}
@@ -155,5 +267,5 @@ export const BuyPage: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
