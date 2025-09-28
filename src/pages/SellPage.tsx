@@ -6,8 +6,9 @@ import { InputTextarea as Textarea } from 'primereact/inputtextarea';
 import { Message } from 'primereact/message';
 import { classNames } from 'primereact/utils';
 import type React from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { z } from 'zod';
+import { ImageUpload, type ImageUploadRef } from '../components';
 import { useSeller, useToast } from '../context';
 
 // Temporary CardContent wrapper for layout purposes
@@ -34,39 +35,107 @@ const sellerRegistrationSchema = z.object({
 
 type SellerRegistrationForm = z.infer<typeof sellerRegistrationSchema>;
 
+// Product creation schema
+const productSchema = z.object({
+  name: z.string().min(3, '≥ 3').max(24, '< 24'),
+  description: z.string().min(10, '≥ 10'),
+  price: z.number().min(0.01, '> 0'),
+  inventory: z.number().int().min(1, '≥ 1'),
+  ipfsHash: z.string().min(1, 'Required')
+});
+
+type ProductForm = z.infer<typeof productSchema>;
+
 export const SellPage: React.FC = () => {
-  const { current: seller, register } = useSeller();
-  const [formData, setFormData] = useState({
+  const { current: seller, register, sell } = useSeller();
+  const [registerData, setRegisterData] = useState({
     name: '',
     twitterUsername: '',
     location: '',
     phoneNumber: ''
   });
+
+  // Product form state
+  const [sellData, setSellData] = useState({
+    name: '',
+    description: '',
+    price: 0,
+    inventory: 1,
+    ipfsHash: ''
+  });
+
+  // Ref for ImageUpload component
+  const imageUploadRef = useRef<ImageUploadRef>(null);
+
   const toast = useToast();
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
+  const [sellErrors, setSellErrors] = useState<Record<string, string>>({});
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
 
   const handleInputChange = (field: keyof SellerRegistrationForm, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setRegisterData((prev) => ({ ...prev, [field]: value }));
+  };
 
-    // Validate single field reactively
+  const handleProductInputChange = (field: keyof ProductForm, value: any) => {
+    setSellData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field
+    if (sellErrors[field]) {
+      setSellErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleImageUpload = (ipfsHash: string | null) => {
+    handleProductInputChange('ipfsHash', ipfsHash ?? '');
+  };
+
+  const validateProductForm = (): boolean => {
     try {
-      const fieldSchema = sellerRegistrationSchema.shape[field];
-      fieldSchema.parse(value);
-      // Clear error only if validation passes
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      productSchema.parse(sellData);
+      setSellErrors({});
+      return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // Show error immediately as user types
-        setErrors((prev) => ({ ...prev, [field]: error.issues[0]?.message || '' }));
+        const fieldErrors: Record<string, string> = {};
+        error.issues.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setSellErrors(fieldErrors);
       }
+      return false;
     }
+  };
+
+  const handleCreateProduct = async () => {
+    if (!validateProductForm()) return;
+    setIsCreatingProduct(true);
+
+    const isSuccess = await sell(sellData);
+    if (isSuccess) {
+      toast.show({
+        severity: 'success',
+        summary: 'Product Created',
+        detail: 'Your product has been listed successfully!'
+      });
+      setSellData({
+        name: '',
+        description: '',
+        price: 0,
+        inventory: 1,
+        ipfsHash: ''
+      });
+      // Clear the uploaded image from the component
+      imageUploadRef.current?.clearImage();
+    }
+    setIsCreatingProduct(false);
   };
 
   const validateForm = (): boolean => {
     try {
-      sellerRegistrationSchema.parse(formData);
-      setErrors({});
+      sellerRegistrationSchema.parse(registerData);
+      setRegisterErrors({});
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -74,7 +143,7 @@ export const SellPage: React.FC = () => {
         error.issues.forEach((err: any) => {
           if (err.path[0]) newErrors[err.path[0] as string] = err.message;
         });
-        setErrors(newErrors);
+        setRegisterErrors(newErrors);
       }
       return false;
     }
@@ -83,18 +152,18 @@ export const SellPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setIsSubmitting(true);
+    setIsRegistering(true);
 
-    const isSuccess = await register(formData);
+    const isSuccess = await register(registerData);
     if (isSuccess) {
-      setFormData({ name: '', twitterUsername: '', location: '', phoneNumber: '' });
+      setRegisterData({ name: '', twitterUsername: '', location: '', phoneNumber: '' });
       toast.show({
         summary: 'Registered Successfully',
         detail: 'Welcome to PeerMart, create your first product now!',
         severity: 'success'
       });
     }
-    setIsSubmitting(false);
+    setIsRegistering(false);
   };
   return (
     <div className="max-w-4xl mx-auto p-6 pt-12">
@@ -151,12 +220,14 @@ export const SellPage: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Profile Name *</label>
                       <Input
-                        value={formData.name}
+                        value={registerData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         placeholder="Business Username"
-                        className={classNames('w-full', { 'p-invalid': errors.name })}
+                        className={classNames('w-full', { 'p-invalid': registerErrors.name })}
                       />
-                      {errors.name && <Message severity="error" text={errors.name} className="mt-1 p-1" />}
+                      {registerErrors.name && (
+                        <Message severity="error" text={registerErrors.name} className="mt-1 p-1" />
+                      )}
                     </div>
 
                     <div>
@@ -166,38 +237,40 @@ export const SellPage: React.FC = () => {
                           <span className="text-muted-foreground">@</span>
                         </div>
                         <Input
-                          value={formData.twitterUsername}
+                          value={registerData.twitterUsername}
                           onChange={(e) => handleInputChange('twitterUsername', e.target.value)}
                           placeholder="username"
-                          className={classNames('w-full pl-8', { 'p-invalid': errors.twitterUsername })}
+                          className={classNames('w-full pl-8', { 'p-invalid': registerErrors.twitterUsername })}
                         />
                       </div>
-                      {errors.twitterUsername && (
-                        <Message severity="error" text={errors.twitterUsername} className="mt-1 p-0" />
+                      {registerErrors.twitterUsername && (
+                        <Message severity="error" text={registerErrors.twitterUsername} className="mt-1 p-0" />
                       )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Location *</label>
                       <Input
-                        value={formData.location}
+                        value={registerData.location}
                         onChange={(e) => handleInputChange('location', e.target.value)}
                         placeholder="City, State/Country"
-                        className={classNames('w-full', { 'p-invalid': errors.location })}
+                        className={classNames('w-full', { 'p-invalid': registerErrors.location })}
                       />
-                      {errors.location && <Message severity="error" text={errors.location} className="mt-1 p-1" />}
+                      {registerErrors.location && (
+                        <Message severity="error" text={registerErrors.location} className="mt-1 p-1" />
+                      )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Phone Number *</label>
                       <Input
-                        value={formData.phoneNumber}
+                        value={registerData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         placeholder="+1 (555) 123-4567"
-                        className={classNames('w-full', { 'p-invalid': errors.phoneNumber })}
+                        className={classNames('w-full', { 'p-invalid': registerErrors.phoneNumber })}
                       />
-                      {errors.phoneNumber && (
-                        <Message severity="error" text={errors.phoneNumber} className="mt-1 p-1" />
+                      {registerErrors.phoneNumber && (
+                        <Message severity="error" text={registerErrors.phoneNumber} className="mt-1 p-1" />
                       )}
                     </div>
                   </div>
@@ -207,11 +280,11 @@ export const SellPage: React.FC = () => {
               <div className="flex justify-end">
                 <Button
                   type="submit"
-                  loading={isSubmitting}
+                  loading={isRegistering}
                   className="bg-primary hover:bg-primary/90"
-                  disabled={isSubmitting}
+                  disabled={isRegistering}
                 >
-                  {isSubmitting ? 'Registering...' : 'Register'}
+                  {isRegistering ? 'Registering...' : 'Register'}
                 </Button>
               </div>
             </form>
@@ -251,22 +324,56 @@ export const SellPage: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Product Name</label>
-                <Input placeholder="Enter product name" className="w-full" />
+                <Input
+                  placeholder="Enter product name"
+                  className="w-full"
+                  value={sellData.name || ''}
+                  onChange={(e) => handleProductInputChange('name', e.target.value)}
+                />
+                {sellErrors.name && <Message severity="error" text={sellErrors.name} className="mt-1 p-1" />}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Description</label>
-                <Textarea placeholder="Describe your product features, condition, etc..." rows={4} className="w-full" />
+                <Textarea
+                  placeholder="Describe your product features, condition, etc..."
+                  rows={4}
+                  className="w-full"
+                  value={sellData.description || ''}
+                  onChange={(e) => handleProductInputChange('description', e.target.value)}
+                />
+                {sellErrors.description && (
+                  <Message severity="error" text={sellErrors.description} className="mt-1 p-1" />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Price (USDC)</label>
-                  <Input placeholder="0.00" className="w-full" />
+                  <Input
+                    placeholder="0.00"
+                    className="w-full"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={sellData.price?.toString() || ''}
+                    onChange={(e) => handleProductInputChange('price', parseFloat(e.target.value) || 0)}
+                  />
+                  {sellErrors.price && <Message severity="error" text={sellErrors.price} className="mt-1 p-1" />}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Inventory</label>
-                  <Input placeholder="1" type="number" className="w-full" />
+                  <Input
+                    placeholder="1"
+                    type="number"
+                    className="w-full"
+                    min="1"
+                    value={sellData.inventory?.toString() || '1'}
+                    onChange={(e) => handleProductInputChange('inventory', parseInt(e.target.value) || 1)}
+                  />
+                  {sellErrors.inventory && (
+                    <Message severity="error" text={sellErrors.inventory} className="mt-1 p-1" />
+                  )}
                 </div>
               </div>
             </div>
@@ -274,38 +381,22 @@ export const SellPage: React.FC = () => {
             {/* Right Column */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Upload Images</label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted/20">
-                  <i className="pi pi-cloud-upload text-4xl text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Drop product images here or click to browse</p>
-                  <p className="text-sm text-muted-foreground mt-2">Supports: JPG, PNG (Max 10MB each)</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  {['Electronics', 'Fashion', 'Home & Garden', 'Sports', 'Books', 'Toys'].map((category) => (
-                    <Badge
-                      key={category}
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground border-primary/30"
-                    >
-                      {category}
-                    </Badge>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium text-foreground mb-2">Upload Image</label>
+                <ImageUpload ref={imageUploadRef} onUpload={handleImageUpload} />
+                {sellErrors.ipfsHash && <Message severity="error" text={sellErrors.ipfsHash} className="mt-1 p-1" />}
               </div>
             </div>
           </div>
 
           <div className="flex justify-end space-x-4 mt-8">
-            <Button className="gap-2 bg-transparent">
-              <i className="pi pi-save" />
-              Save Draft
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90 gap-2">
+            <Button
+              className="bg-primary hover:bg-primary/90 gap-2"
+              onClick={handleCreateProduct}
+              loading={isCreatingProduct}
+              disabled={isCreatingProduct}
+            >
               <i className="pi pi-check" />
-              List Product
+              {isCreatingProduct ? 'Creating...' : 'List Product'}
             </Button>
           </div>
         </CardContent>

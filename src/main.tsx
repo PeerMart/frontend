@@ -7,6 +7,7 @@ import { Layout } from './components/Layout';
 import {
   AuthProvider,
   ContractProvider,
+  IpfsProvider,
   SellerProvider,
   SidebarProvider,
   ThemeProvider,
@@ -25,21 +26,23 @@ createRoot(document.getElementById('root')!).render(
         <ToastProvider>
           <AuthProvider>
             <ContractProvider>
-              <SellerProvider>
-                <SidebarProvider>
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Layout />}>
-                        <Route index element={<BuyPage />} />
-                        <Route path="sell" element={<SellPage />} />
-                        <Route path="activity" element={<ActivityPage />} />
-                        <Route path="about" element={<AboutPage />} />
-                      </Route>
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </BrowserRouter>
-                </SidebarProvider>
-              </SellerProvider>
+              <IpfsProvider>
+                <SellerProvider>
+                  <SidebarProvider>
+                    <BrowserRouter>
+                      <Routes>
+                        <Route path="/" element={<Layout />}>
+                          <Route index element={<BuyPage />} />
+                          <Route path="sell" element={<SellPage />} />
+                          <Route path="activity" element={<ActivityPage />} />
+                          <Route path="about" element={<AboutPage />} />
+                        </Route>
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </BrowserRouter>
+                  </SidebarProvider>
+                </SellerProvider>
+              </IpfsProvider>
             </ContractProvider>
           </AuthProvider>
         </ToastProvider>

@@ -6,6 +6,7 @@ import { useContract } from './ContractContext';
 interface SellerContextType {
   current: Seller | null;
   register: (props: RegisterSellerProps) => Promise<boolean>;
+  sell: (props: ListProductProps) => Promise<boolean>;
 }
 
 export interface RegisterSellerProps {
@@ -15,9 +16,18 @@ export interface RegisterSellerProps {
   phoneNumber: string;
 }
 
+export interface ListProductProps {
+  name: string;
+  ipfsHash: string;
+  price: number;
+  description: string;
+  inventory: number;
+}
+
 const SellerContext = createContext<SellerContextType>({
   current: null,
-  register: async () => false
+  register: async () => false,
+  sell: async () => false
 });
 
 export const useSeller = () => useContext(SellerContext);
@@ -49,6 +59,16 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return !!result;
   };
 
+  const sell = async (props: ListProductProps) => {
+    if (!wallet || !seller) return false;
+
+    const { name, ipfsHash, price, description, inventory } = props;
+    const imageUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
+
+    const result = await write({ method: 'createProduct', args: [name, imageUrl, price, description, inventory] });
+    return !!result;
+  };
+
   useEffect(() => {
     if (!wallet) {
       setSeller(null);
@@ -57,5 +77,5 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [wallet]);
 
-  return <SellerContext.Provider value={{ current: seller, register }}>{children}</SellerContext.Provider>;
+  return <SellerContext.Provider value={{ current: seller, register, sell }}>{children}</SellerContext.Provider>;
 };
