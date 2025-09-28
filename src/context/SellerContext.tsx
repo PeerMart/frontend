@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Seller } from '../models';
+import { Product, Seller } from '../models';
 import { useAuth } from './AuthContext';
 import { useContract } from './ContractContext';
 
 interface SellerContextType {
   current: Seller | null;
+  products: Product[];
+  isLoadingProducts: boolean;
   register: (props: RegisterSellerProps) => Promise<boolean>;
   sell: (props: ListProductProps) => Promise<boolean>;
+  fetchProducts: () => Promise<void>;
 }
 
 export interface RegisterSellerProps {
@@ -26,8 +29,11 @@ export interface ListProductProps {
 
 const SellerContext = createContext<SellerContextType>({
   current: null,
+  products: [],
+  isLoadingProducts: false,
   register: async () => false,
-  sell: async () => false
+  sell: async () => false,
+  fetchProducts: async () => {}
 });
 
 export const useSeller = () => useContext(SellerContext);
@@ -36,6 +42,8 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { wallet } = useAuth();
   const { read, write } = useContract();
   const [seller, setSeller] = useState<Seller | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const fetchAndSetSeller = async () => {
     if (!wallet) return;
@@ -46,6 +54,14 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const converted = new Seller([...raw1, ...raw2]);
       if (converted.name) setSeller(converted);
     }
+  };
+
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    setIsLoadingProducts(false);
   };
 
   const register = async (props: RegisterSellerProps) => {
@@ -65,17 +81,46 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const { name, ipfsHash, price, description, inventory } = props;
     const imageUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
 
-    const result = await write({ method: 'createProduct', args: [name, imageUrl, price, description, inventory] });
+    const result = await write({
+      method: 'createProduct',
+      args: [name, imageUrl, price * 1e6, description, inventory]
+    });
+
+    // Refresh products list after successful creation
+    if (result) {
+      setTimeout(() => {
+        fetchProducts();
+      }, 2000); // Wait 2 seconds for transaction to be mined
+    }
+
     return !!result;
   };
 
   useEffect(() => {
     if (!wallet) {
       setSeller(null);
+      setProducts([]);
     } else {
       fetchAndSetSeller();
     }
   }, [wallet]);
 
-  return <SellerContext.Provider value={{ current: seller, register, sell }}>{children}</SellerContext.Provider>;
+  useEffect(() => {
+    if (seller) fetchProducts();
+  }, [seller]);
+
+  return (
+    <SellerContext.Provider
+      value={{
+        current: seller,
+        products,
+        isLoadingProducts,
+        register,
+        sell,
+        fetchProducts
+      }}
+    >
+      {children}
+    </SellerContext.Provider>
+  );
 };

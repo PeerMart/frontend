@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -47,7 +48,7 @@ const productSchema = z.object({
 type ProductForm = z.infer<typeof productSchema>;
 
 export const SellPage: React.FC = () => {
-  const { current: seller, register, sell } = useSeller();
+  const { current: seller, register, sell, products, isLoadingProducts, fetchProducts } = useSeller();
   const [registerData, setRegisterData] = useState({
     name: '',
     twitterUsername: '',
@@ -405,54 +406,96 @@ export const SellPage: React.FC = () => {
       {/* Your Listings */}
       <Card>
         <CardContent className="p-8">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
-            <i className="pi pi-list mr-3 text-chart-2" />
-            Your Active Listings
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-foreground flex items-center">
+              <i className="pi pi-list mr-3 text-chart-2" />
+              Your Active Listings
+            </h2>
+            <div className="flex space-x-2">
+              <Button
+                className="p-button-outlined"
+                onClick={() => fetchProducts()}
+                size="small"
+                loading={isLoadingProducts}
+                title="Refresh recent products (last 7 days)"
+              >
+                <i className="pi pi-refresh mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
 
           <div className="space-y-4">
-            {[
-              { name: 'iPhone 14 Pro - Unlocked', price: '800', status: 'Active', inventory: '2' },
-              { name: 'Nike Air Max 270', price: '120', status: 'Sold', inventory: '0' }
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-6 border border-border rounded-lg bg-card hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-lg flex items-center justify-center">
-                    <i className="pi pi-image text-xl text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground">Listed 2 days ago • {item.inventory} in stock</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <div className="font-semibold text-foreground">${item.price} USDC</div>
-                    <Badge
-                      className={
-                        item.status === 'Active'
-                          ? 'bg-chart-2/10 text-chart-2 border-chart-2/30'
-                          : 'bg-muted text-muted-foreground'
-                      }
-                    >
-                      {item.status}
-                    </Badge>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button className="p-button-text" size="small">
-                      <i className="pi pi-pencil" />
-                    </Button>
-                    <Button size="small" className="p-button-text text-destructive hover:text-destructive">
-                      <i className="pi pi-trash" />
-                    </Button>
-                  </div>
+            {isLoadingProducts ? (
+              <div className="flex items-center justify-center p-8">
+                <i className="pi pi-spin pi-spinner text-2xl text-muted-foreground mr-2" />
+                <span className="text-muted-foreground">Loading your products...</span>
+              </div>
+            ) : products.length == 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                <i className="pi pi-box text-4xl mb-4" />
+                <p className="text-lg">No products listed yet</p>
+                <p className="text-sm">Create your first product listing above!</p>
+                <div className="mt-4 space-x-2">
+                  <Button className="p-button-outlined" onClick={() => fetchProducts()} size="small">
+                    <i className="pi pi-refresh mr-2" />
+                    Refresh
+                  </Button>
                 </div>
               </div>
-            ))}
+            ) : (
+              products.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between p-6 border border-border rounded-lg bg-card hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className="w-full h-full flex items-center justify-center">
+                        <i className="pi pi-image text-xl text-muted-foreground" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Product #{product.id} • {product.inventory} in stock • {product.totalSold} sold
+                      </p>
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground mt-1 max-w-md truncate">{product.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="font-semibold text-foreground">${ethers.formatUnits(product.price, 6)} USDC</div>
+                      <Badge
+                        className={
+                          product.inventory > 0
+                            ? 'bg-chart-2/10 text-chart-2 border-chart-2/30'
+                            : 'bg-muted text-muted-foreground'
+                        }
+                      >
+                        {product.inventory > 0 ? 'Active' : 'Out of Stock'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
