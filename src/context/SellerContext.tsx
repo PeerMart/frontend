@@ -57,11 +57,49 @@ export const SellerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const fetchProducts = async () => {
+    if (!wallet || !seller) {
+      setProducts([]);
+      return;
+    }
+
     setIsLoadingProducts(true);
+    try {
+      // Get total number of products from contract
+      const productCount = await read({ method: 'productCount' });
+      if (!productCount || productCount === 0) {
+        setProducts([]);
+        setIsLoadingProducts(false);
+        return;
+      }
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+      const sellerProducts: Product[] = [];
 
-    setIsLoadingProducts(false);
+      // Loop through all products to find ones created by this seller
+      for (let productId = 1; productId <= Number(productCount); productId++) {
+        try {
+          // Get product details
+          const productData = await read({ method: 'products', args: [productId] });
+
+          // Check if product exists and belongs to current seller
+          if (productData && productData[0] !== 0 && productData[4].toLowerCase() === wallet.address.toLowerCase()) {
+            const product = new Product(productData);
+            sellerProducts.push(product);
+          }
+        } catch (error) {
+          console.error(`Error fetching product ${productId}:`, error);
+          // Continue with next product even if one fails
+        }
+      }
+
+      // Sort products by ID (newest first)
+      sellerProducts.sort((a, b) => b.id - a.id);
+      setProducts(sellerProducts);
+    } catch (error) {
+      console.error('Error fetching seller products:', error);
+      setProducts([]);
+    } finally {
+      setIsLoadingProducts(false);
+    }
   };
 
   const register = async (props: RegisterSellerProps) => {
