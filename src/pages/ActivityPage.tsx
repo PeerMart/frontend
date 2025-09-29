@@ -3,8 +3,8 @@ import { Badge } from 'primereact/badge';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import type React from 'react';
-import { useEffect } from 'react';
-import { usePurchases } from '../context';
+import { useEffect, useState } from 'react';
+import { useContract, usePurchases, useToast } from '../context';
 
 interface ActivityItem {
   id: number;
@@ -16,14 +16,63 @@ interface ActivityItem {
   color: string;
   imageUrl?: string;
   sellerName?: string;
+  isPaid?: boolean;
+  isSold?: boolean;
 }
 
 export const ActivityPage: React.FC = () => {
   const { current: purchases, fetchPurchases } = usePurchases();
+  const { write } = useContract();
+  const toast = useToast();
+  const [processingItems, setProcessingItems] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchPurchases();
   }, []);
+
+  const handleConfirmPayment = async (productId: number) => {
+    setProcessingItems((prev) => new Set(prev).add(productId));
+    try {
+      const success = await write({ method: 'confirmPayment', args: [productId] });
+      if (success) {
+        toast.show({ detail: 'Payment confirmed successfully!', severity: 'success' });
+        await fetchPurchases(); // Refresh the list
+      } else {
+        toast.show({ detail: 'Failed to confirm payment', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      toast.show({ detail: 'Error confirming payment', severity: 'error' });
+    } finally {
+      setProcessingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleCancelPurchase = async (productId: number) => {
+    setProcessingItems((prev) => new Set(prev).add(productId));
+    try {
+      const success = await write({ method: 'cancelPurchase', args: [productId] });
+      if (success) {
+        toast.show({ detail: 'Purchase cancelled successfully!', severity: 'success' });
+        await fetchPurchases(); // Refresh the list
+      } else {
+        toast.show({ detail: 'Failed to cancel purchase', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error cancelling purchase:', error);
+      toast.show({ detail: 'Error cancelling purchase', severity: 'error' });
+    } finally {
+      setProcessingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
 
   // Convert purchases to activities format
   const activities: ActivityItem[] = purchases.map((purchase) => ({
@@ -39,9 +88,11 @@ export const ActivityPage: React.FC = () => {
       : `Purchase cancelled or refunded`,
     timestamp: `Product #${purchase.productId}`,
     icon: purchase.isSold ? 'pi pi-check-circle' : purchase.isPaid ? 'pi pi-clock' : 'pi pi-times-circle',
-    color: purchase.isSold ? 'chart-2' : purchase.isPaid ? 'chart-3' : 'chart-4',
+    color: purchase.isSold ? 'green-500' : purchase.isPaid ? 'yellow-500' : 'red-500',
     imageUrl: purchase.imageUrl,
-    sellerName: purchase.sellerName
+    sellerName: purchase.sellerName,
+    isPaid: purchase.isPaid,
+    isSold: purchase.isSold
   }));
 
   // Add some mock data if no real purchases exist
@@ -115,50 +166,31 @@ export const ActivityPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filter Buttons */}
-      <Card className="mb-8">
-        <div className="p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Filter Activities</h2>
-          <div className="flex flex-wrap gap-2">
-            <Button outlined size="small">
-              All
-            </Button>
-            <Button outlined size="small" className="gap-2 bg-transparent">
-              <i className="pi pi-check-circle" />
-              Sales
-            </Button>
-            <Button outlined size="small" className="gap-2 bg-transparent">
-              <i className="pi pi-shopping-cart" />
-              Purchases
-            </Button>
-            <Button outlined size="small" className="gap-2 bg-transparent">
-              <i className="pi pi-plus-circle" />
-              Listings
-            </Button>
-            <Button outlined size="small" className="gap-2 bg-transparent">
-              <i className="pi pi-shield" />
-              Escrow
-            </Button>
-          </div>
-        </div>
-      </Card>
-
       {/* Activity Timeline */}
       <Card>
-        <div className="p-8">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center">
-            <i className="pi pi-clock mr-3 text-primary" />
-            Recent Activity
-          </h2>
-
-          <div className="space-y-6">
+        <div className="p-2">
+          <div className="space-y-4">
             {allActivities.map((item) => (
               <div key={item.id} className="flex items-start space-x-4 pb-6 border-b border-border last:border-b-0">
                 <div className="flex items-center space-x-4">
                   <div
-                    className={`flex items-center justify-center w-12 h-12 rounded-full bg-${item.color}/10 border-2 border-${item.color}/20`}
+                    className={`flex items-center justify-center w-12 h-12 rounded-full ${
+                      item.type === 'completed'
+                        ? 'border-2 border-green-600'
+                        : item.type === 'pending'
+                        ? 'border-2 border-yellow-600'
+                        : 'border-2 border-red-600'
+                    }`}
                   >
-                    <i className={`${item.icon} text-lg text-${item.color}`} />
+                    <i
+                      className={`${item.icon} text-lg ${
+                        item.type === 'completed'
+                          ? 'text-green-600'
+                          : item.type === 'pending'
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
+                      }`}
+                    />
                   </div>
 
                   {/* Product Image */}
@@ -185,9 +217,32 @@ export const ActivityPage: React.FC = () => {
                         {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                       </Badge>
                     </div>
-                    <Button size="small" className="p-button-text">
-                      <i className="pi pi-external-link" />
-                    </Button>
+                    {/* Action Buttons - Show only for pending transactions */}
+                    {item.isPaid && !item.isSold && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="small"
+                          severity="success"
+                          onClick={() => handleConfirmPayment(item.id)}
+                          loading={processingItems.has(item.id)}
+                          className="p-button-sm"
+                        >
+                          <i className="pi pi-check mr-1" />
+                          Confirm
+                        </Button>
+                        <Button
+                          size="small"
+                          severity="danger"
+                          outlined
+                          onClick={() => handleCancelPurchase(item.id)}
+                          loading={processingItems.has(item.id)}
+                          className="p-button-sm"
+                        >
+                          <i className="pi pi-times mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-muted-foreground mb-1">{item.description}</p>
                   {item.sellerName && (
@@ -205,7 +260,7 @@ export const ActivityPage: React.FC = () => {
           <div className="text-center mt-8">
             <Button outlined className="gap-2 bg-transparent" onClick={fetchPurchases}>
               <i className="pi pi-refresh" />
-              Refresh Activities
+              Refresh
             </Button>
           </div>
         </div>
