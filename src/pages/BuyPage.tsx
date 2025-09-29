@@ -15,6 +15,8 @@ const CardContent: React.FC<React.PropsWithChildren<{ className?: string }>> = (
 export const BuyPage: React.FC = () => {
   const { products, loading, buy } = useBuyer();
   const { wallet } = useAuth();
+  const [purchasingProduct, setPurchasingProduct] = useState<number | null>(null);
+  
   // IPFS gateways for fallback
   const ipfsGateways = [
     'https://dweb.link/ipfs/',
@@ -83,6 +85,15 @@ export const BuyPage: React.FC = () => {
         />
       </>
     );
+  };
+
+  const handlePurchase = async (productId: number, price: number) => {
+    setPurchasingProduct(productId);
+    try {
+      await buy(productId, price);
+    } finally {
+      setPurchasingProduct(null);
+    }
   };
 
   return (
@@ -191,10 +202,11 @@ export const BuyPage: React.FC = () => {
                       <Button
                         size="small"
                         className="bg-primary hover:bg-primary/90"
-                        onClick={() => buy(product.id, product.price)}
-                        disabled={!wallet || product.inventory === 0}
+                        onClick={() => handlePurchase(product.id, product.price)}
+                        disabled={!wallet || product.inventory === 0 || purchasingProduct === product.id}
+                        loading={purchasingProduct === product.id}
                       >
-                        {!wallet ? 'Connect Wallet' : 'Buy'}
+                        {!wallet ? 'Connect Wallet' : purchasingProduct === product.id ? 'Buying...' : 'Buy'}
                       </Button>
                     </div>
                     {product.totalSold > 0 && (
