@@ -1,9 +1,9 @@
-import { parseUnits } from 'ethers';
+import { formatUnits, parseUnits } from 'ethers';
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
 import type { MenuItem } from 'primereact/menuitem';
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth, useContract, useToast } from '../context';
 
 interface WalletButtonProps {
@@ -13,13 +13,37 @@ interface WalletButtonProps {
 
 export const WalletButton: React.FC<WalletButtonProps> = ({ mobile = false, className = '' }) => {
   const { isConnected, wallet, connectWallet, disconnectWallet, isConnecting, error } = useAuth();
-  const { write } = useContract();
+  const { read, write } = useContract();
   const walletMenuRef = useRef<Menu>(null);
   const toast = useToast();
   const [isMinting, setIsMinting] = useState(false);
+  const [usdcBalance, setUsdcBalance] = useState<string>('0');
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const fetchUsdcBalance = async () => {
+    if (!wallet?.address) return;
+
+    try {
+      const balance = await read({
+        method: 'balanceOf',
+        args: [wallet.address],
+        isUsdc: true
+      });
+
+      if (balance !== null && balance !== undefined) {
+        // Format balance from 6 decimals to readable format
+        const formattedBalance = formatUnits(balance, 6);
+        setUsdcBalance(parseFloat(formattedBalance).toFixed(2));
+      } else {
+        setUsdcBalance('0');
+      }
+    } catch (error) {
+      console.error('Error fetching USDC balance:', error);
+      setUsdcBalance('0');
+    }
   };
 
   const handleMintUsdc = async () => {
@@ -42,6 +66,8 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ mobile = false, clas
           detail: '100 USDC has been minted to your wallet',
           life: 3000
         });
+        // Refresh USDC balance after minting
+        fetchUsdcBalance();
       }
     } catch (err) {
       toast.show({
@@ -56,6 +82,21 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ mobile = false, clas
   };
 
   const walletMenuItems: MenuItem[] = [
+    {
+      label: `${parseFloat(wallet?.balance || '0').toFixed(4)} HBAR`,
+      icon: 'pi pi-circle-fill',
+      disabled: true,
+      className: 'text-muted-foreground pointer-events-none'
+    },
+    {
+      label: `${usdcBalance} USDC`,
+      icon: 'pi pi-circle-fill',
+      disabled: true,
+      className: 'text-muted-foreground pointer-events-none'
+    },
+    {
+      separator: true
+    },
     {
       label: 'Copy Address',
       icon: 'pi pi-copy',
@@ -97,6 +138,15 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ mobile = false, clas
     }
   };
 
+  // Fetch USDC balance when wallet changes
+  useEffect(() => {
+    if (wallet?.address) {
+      fetchUsdcBalance();
+    } else {
+      setUsdcBalance('0');
+    }
+  }, [wallet?.address, read]);
+
   if (mobile) {
     return (
       <div className={`border-t border-border pt-4 mb-6 ${className}`}>
@@ -106,7 +156,10 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ mobile = false, clas
             <div className="p-3 bg-muted rounded-md">
               <div className="text-sm text-muted-foreground">Connected</div>
               <div className="font-mono text-sm">{formatAddress(wallet.address)}</div>
-              <div className="text-xs text-muted-foreground mt-1">{parseFloat(wallet.balance).toFixed(4)} HBAR</div>
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{parseFloat(wallet.balance).toFixed(4)} HBAR</span>
+                <span>{usdcBalance} USDC</span>
+              </div>
             </div>
             <div className="space-y-2">
               <div className="flex space-x-2">
