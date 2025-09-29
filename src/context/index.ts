@@ -2,6 +2,7 @@ export * from './AuthContext';
 export * from './BuyerContext';
 export * from './ContractContext';
 export * from './IPFSContext';
+export * from './PurchasesContext';
 export * from './SellerContext';
 export * from './SidebarContext';
 export * from './ThemeContext';

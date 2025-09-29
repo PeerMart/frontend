@@ -1,57 +1,76 @@
-import { Button } from "primereact/button"
-import { Card } from "primereact/card"
-import { Badge } from "primereact/badge"
-import type React from "react"
+import { ethers } from 'ethers';
+import { Badge } from 'primereact/badge';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import type React from 'react';
+import { useEffect } from 'react';
+import { usePurchases } from '../context';
+
+interface ActivityItem {
+  id: number;
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  icon: string;
+  color: string;
+  imageUrl?: string;
+  sellerName?: string;
+}
 
 export const ActivityPage: React.FC = () => {
-  const activities = [
-    {
-      id: 1,
-      type: "sale",
-      title: "iPhone 14 Pro Sold",
-      description: "Payment confirmed - $800 USDC received",
-      timestamp: "2 hours ago",
-      icon: "pi pi-check-circle",
-      color: "chart-2",
-    },
-    {
-      id: 2,
-      type: "listing",
-      title: "New Product Listed",
-      description: "Nike Air Max 270 listed for $120 USDC",
-      timestamp: "5 hours ago",
-      icon: "pi pi-plus-circle",
-      color: "primary",
-    },
-    {
-      id: 3,
-      type: "purchase",
-      title: "MacBook Pro Purchased",
-      description: "Payment in escrow - awaiting delivery confirmation",
-      timestamp: "1 day ago",
-      icon: "pi pi-shopping-cart",
-      color: "chart-3",
-    },
-    {
-      id: 4,
-      type: "refund",
-      title: "Purchase Cancelled",
-      description: "Refund processed for Samsung Galaxy S23 - $650 USDC",
-      timestamp: "2 days ago",
-      icon: "pi pi-undo",
-      color: "chart-4",
-    },
-  ]
+  const { current: purchases, fetchPurchases } = usePurchases();
+
+  useEffect(() => {
+    fetchPurchases();
+  }, []);
+
+  // Convert purchases to activities format
+  const activities: ActivityItem[] = purchases.map((purchase) => ({
+    id: purchase.productId,
+    type: purchase.isSold ? 'completed' : purchase.isPaid ? 'pending' : 'cancelled',
+    title: purchase.productName ? `${purchase.productName}` : `Product #${purchase.productId}`,
+    description: purchase.isSold
+      ? `Purchase completed - ${
+          purchase.productPrice ? ethers.formatUnits(purchase.productPrice.toString(), 6) : 'N/A'
+        } USDC`
+      : purchase.isPaid
+      ? `Payment in escrow - awaiting delivery confirmation`
+      : `Purchase cancelled or refunded`,
+    timestamp: `Product #${purchase.productId}`,
+    icon: purchase.isSold ? 'pi pi-check-circle' : purchase.isPaid ? 'pi pi-clock' : 'pi pi-times-circle',
+    color: purchase.isSold ? 'chart-2' : purchase.isPaid ? 'chart-3' : 'chart-4',
+    imageUrl: purchase.imageUrl,
+    sellerName: purchase.sellerName
+  }));
+
+  // Add some mock data if no real purchases exist
+  const mockActivities: ActivityItem[] =
+    purchases.length === 0
+      ? [
+          {
+            id: 0,
+            type: 'info',
+            title: 'No Purchases Yet',
+            description: "You haven't made any purchases yet. Browse the marketplace to find great deals!",
+            timestamp: 'Get started',
+            icon: 'pi pi-info-circle',
+            color: 'primary'
+          }
+        ]
+      : [];
+
+  const allActivities = [...activities, ...mockActivities];
 
   const getTagVariant = (type: string) => {
     const variants = {
-      sale: "default" as const,
-      listing: "secondary" as const,
-      purchase: "outline" as const,
-      refund: "secondary" as const,
-    }
-    return variants[type as keyof typeof variants] || "secondary"
-  }
+      sale: 'default' as const,
+      listing: 'secondary' as const,
+      purchase: 'outline' as const,
+      refund: 'secondary' as const
+    };
+    return variants[type as keyof typeof variants] || 'secondary';
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 pt-12">
@@ -70,26 +89,28 @@ export const ActivityPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         <Card className="text-center bg-gradient-to-br from-chart-2/5 to-chart-2/10 border-chart-2/20">
           <div className="pt-6">
-            <div className="text-4xl font-bold text-chart-2 mb-2">23</div>
-            <div className="text-muted-foreground">Products Sold</div>
+            <div className="text-4xl font-bold text-chart-2 mb-2">{purchases.filter((p) => p.isSold).length}</div>
+            <div className="text-muted-foreground">Completed Purchases</div>
           </div>
         </Card>
         <Card className="text-center bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <div className="pt-6">
-            <div className="text-4xl font-bold text-primary mb-2">15</div>
-            <div className="text-muted-foreground">Products Bought</div>
+            <div className="text-4xl font-bold text-primary mb-2">{purchases.length}</div>
+            <div className="text-muted-foreground">Total Purchases</div>
           </div>
         </Card>
         <Card className="text-center bg-gradient-to-br from-chart-3/5 to-chart-3/10 border-chart-3/20">
           <div className="pt-6">
-            <div className="text-4xl font-bold text-chart-3 mb-2">7</div>
-            <div className="text-muted-foreground">Active Listings</div>
+            <div className="text-4xl font-bold text-chart-3 mb-2">
+              {purchases.filter((p) => p.isPaid && !p.isSold).length}
+            </div>
+            <div className="text-muted-foreground">In Escrow</div>
           </div>
         </Card>
         <Card className="text-center bg-gradient-to-br from-chart-4/5 to-chart-4/10 border-chart-4/20">
           <div className="pt-6">
-            <div className="text-4xl font-bold text-chart-4 mb-2">2</div>
-            <div className="text-muted-foreground">In Escrow</div>
+            <div className="text-4xl font-bold text-chart-4 mb-2">{purchases.filter((p) => !p.isPaid).length}</div>
+            <div className="text-muted-foreground">Cancelled/Refunded</div>
           </div>
         </Card>
       </div>
@@ -131,13 +152,31 @@ export const ActivityPage: React.FC = () => {
           </h2>
 
           <div className="space-y-6">
-            {activities.map((item) => (
+            {allActivities.map((item) => (
               <div key={item.id} className="flex items-start space-x-4 pb-6 border-b border-border last:border-b-0">
-                <div
-                  className={`flex items-center justify-center w-12 h-12 rounded-full bg-${item.color}/10 border-2 border-${item.color}/20`}
-                >
-                  <i className={`${item.icon} text-lg text-${item.color}`} />
+                <div className="flex items-center space-x-4">
+                  <div
+                    className={`flex items-center justify-center w-12 h-12 rounded-full bg-${item.color}/10 border-2 border-${item.color}/20`}
+                  >
+                    <i className={`${item.icon} text-lg text-${item.color}`} />
+                  </div>
+
+                  {/* Product Image */}
+                  {item.imageUrl && (
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-3">
@@ -151,21 +190,26 @@ export const ActivityPage: React.FC = () => {
                     </Button>
                   </div>
                   <p className="text-muted-foreground mb-1">{item.description}</p>
+                  {item.sellerName && (
+                    <p className="text-sm text-muted-foreground">
+                      Seller: <span className="font-medium">{item.sellerName}</span>
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">{item.timestamp}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Load More */}
+          {/* Refresh */}
           <div className="text-center mt-8">
-            <Button outlined className="gap-2 bg-transparent">
+            <Button outlined className="gap-2 bg-transparent" onClick={fetchPurchases}>
               <i className="pi pi-refresh" />
-              Load More Activities
+              Refresh Activities
             </Button>
           </div>
         </div>
       </Card>
     </div>
-  )
-}
+  );
+};
